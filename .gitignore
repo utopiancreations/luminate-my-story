@@ -33,6 +33,3 @@ DerivedData/
 
 # Realm
 realm-object-store/
-
-# Reference POC Python files
-/reference_poc_python/
