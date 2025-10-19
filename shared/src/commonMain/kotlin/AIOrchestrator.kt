@@ -1,6 +1,7 @@
 package com.luminatemystory.shared
 
 import com.luminatemystory.shared.schemas.InterviewData
+import com.luminatemystory.shared.schemas.UserContext
 
 /**
  * AI Orchestrator
@@ -14,36 +15,75 @@ import com.luminatemystory.shared.schemas.InterviewData
 class AIOrchestrator(private val llmHandler: LLMHandler) {
 
     /**
-     * Processes a new topic from the user and generates an initial,
-     * empathetic question.
+     * Builds a final prompt string from a template and user context.
      *
-     * @param topic The user's topic.
-     * @return A generated question.
+     * @param template The prompt template string.
+     * @param userContext The user's personalization data.
+     * @param additionalParams A map of any other parameters to replace.
+     * @return The final, formatted prompt string.
      */
-    fun processNewTopic(topic: String): String {
-        // TODO: Implement actual logic to format the prompt and interact with the LLM
-        return "That sounds interesting. Tell me more about what was going through your mind at that moment."
+    private fun buildPrompt(template: String, userContext: UserContext, additionalParams: Map<String, String>): String {
+        var finalPrompt = template
+        finalPrompt = finalPrompt.replace("{user_name}", userContext.userName)
+        finalPrompt = finalPrompt.replace("{user_description}", userContext.userDescription)
+        finalPrompt = finalPrompt.replace("{user_themes}", userContext.userThemes)
+        finalPrompt = finalPrompt.replace("{mentioned_names_list}", userContext.mentionedNames.joinToString(", "))
+
+        additionalParams.forEach { (key, value) ->
+            finalPrompt = finalPrompt.replace("{$key}", value)
+        }
+
+        return finalPrompt
     }
 
     /**
-     * Generates the next interview question based on the conversation history.
+     * Processes a new topic from the user and generates an outline prompt.
      *
-     * @param context The conversation history.
-     * @return A generated question.
+     * @param topic The user's topic (raw text).
+     * @param userContext The user's personalization data.
+     * @return A generated prompt.
      */
-    fun generateInterviewQuestion(context: String): String {
-        // TODO: Implement actual logic to format the prompt and interact with the LLM
-        return "And how did that make you feel?"
+    fun processNewTopic(topic: String, userContext: UserContext): String {
+        val params = mapOf("raw_text_content" to topic)
+        val finalPrompt = buildPrompt(LumiPromptTemplates.GET_OUTLINE_PROMPT_TEMPLATE, userContext, params)
+        return finalPrompt
+    }
+
+    /**
+     * Generates an interview question prompt based on an outline point.
+     *
+     * @param context The outline point.
+     * @param userContext The user's personalization data.
+     * @return A generated prompt.
+     */
+    fun generateInterviewQuestion(context: String, userContext: UserContext): String {
+        val params = mapOf("outline_point" to context)
+        val finalPrompt = buildPrompt(LumiPromptTemplates.GET_INTERVIEW_PROMPT_TEMPLATE, userContext, params)
+        return finalPrompt
     }
 
     /**
      * Takes completed interview data and generates a draft for a scene.
      *
      * @param interviewData The interview data.
-     * @return A generated draft.
+     * @param userContext The user's personalization data.
+     * @return A generated draft prompt.
      */
-    fun generateDraft(interviewData: InterviewData): String {
-        // TODO: Implement actual logic to format the prompt and interact with the LLM
-        return "This is a draft of the scene based on our conversation. I hope you like it."
+    fun generateDraft(interviewData: InterviewData, userContext: UserContext): String {
+        // 1. Format the Q&A block from interviewData
+        val qAndABlock = interviewData.qaPairs.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
+
+        // 2. Prepare additional parameters
+        val params = mapOf(
+            "outline_point" to "Some Scene Title", // This will come from the Scene object later
+            "q_and_a_block" to qAndABlock
+        )
+
+        // 3. Build the final prompt
+        val finalPrompt = buildPrompt(LumiPromptTemplates.GET_WRITE_PROMPT_TEMPLATE, userContext, params)
+
+        // 4. (Placeholder) Return the generated prompt for now to verify it's working
+        // In the future, this will be sent to the llmHandler
+        return finalPrompt
     }
 }
