@@ -11,6 +11,5 @@ class InterviewData : RealmObject {
     @PrimaryKey
     var id: RealmUUID = RealmUUID.random()
     var qaPairs: RealmList<QAPair> = realmListOf()
-    var createdAt: RealmInstant = RealmInstant.now()
-    var lastModified: RealmInstant = RealmInstant.now()
+    var completedAt: RealmInstant = RealmInstant.now()
 }
