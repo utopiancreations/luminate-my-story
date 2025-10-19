@@ -93,11 +93,11 @@ class StoryManager(private val persistenceLayer: PersistenceLayer) {
     /**
      * Creates a new scene for a given chapter.
      * @param chapter The chapter to add the scene to.
-     * @param content The content of the new scene.
+     * @param title The title of the new scene.
      * @return The newly created Scene object.
      */
-    suspend fun createScene(chapter: Chapter, content: String): Scene {
-        return persistenceLayer.createScene(chapter, content)
+    suspend fun createScene(chapter: Chapter, title: String?): Scene {
+        return persistenceLayer.createScene(chapter, title)
     }
 
     /**
@@ -115,6 +115,19 @@ class StoryManager(private val persistenceLayer: PersistenceLayer) {
      */
     suspend fun updateScene(scene: Scene) {
         persistenceLayer.updateScene(scene)
+    }
+
+    /**
+     * Updates the draft text for a specific scene.
+     * @param sceneId The ID of the scene to update.
+     * @param draft The new draft text.
+     */
+    suspend fun updateSceneDraft(sceneId: RealmUUID, draft: String) {
+        val scene = persistenceLayer.getScene(sceneId)
+        scene?.let {
+            it.draftText = draft
+            persistenceLayer.updateScene(it)
+        }
     }
 
     /**

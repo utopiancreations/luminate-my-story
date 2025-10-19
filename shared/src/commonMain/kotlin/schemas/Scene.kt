@@ -8,7 +8,10 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 class Scene : RealmObject {
     @PrimaryKey
     var id: RealmUUID = RealmUUID.random()
-    var content: String = ""
+    var title: String? = null
+    var order: Int = 0
+    var interviewData: InterviewData? = null
+    var draftText: String = ""
     var createdAt: RealmInstant = RealmInstant.now()
     var lastModified: RealmInstant = RealmInstant.now()
 }
