@@ -1,11 +1,14 @@
 package com.luminatemystory.shared.schemas
 
-/**
- * QA Pair
- * 
- * Represents a question-answer pair used in interviews,
- * including the question text, answer, and metadata.
- */
-class QAPair {
-    // TODO: Implement QAPair as Realm object
+import io.realm.kotlin.types.RealmInstant
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.RealmUUID
+import io.realm.kotlin.types.annotations.PrimaryKey
+
+class QAPair : RealmObject {
+    @PrimaryKey
+    var id: RealmUUID = RealmUUID.random()
+    var question: String = ""
+    var answer: String = ""
+    var createdAt: RealmInstant = RealmInstant.now()
 }

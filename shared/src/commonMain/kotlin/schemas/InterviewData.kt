@@ -1,11 +1,16 @@
 package com.luminatemystory.shared.schemas
 
-/**
- * Interview Data
- * 
- * Represents raw interview data collected from users,
- * including audio transcriptions, metadata, and processing status.
- */
-class InterviewData {
-    // TODO: Implement InterviewData as Realm object
+import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmInstant
+import io.realm.kotlin.types.RealmList
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.RealmUUID
+import io.realm.kotlin.types.annotations.PrimaryKey
+
+class InterviewData : RealmObject {
+    @PrimaryKey
+    var id: RealmUUID = RealmUUID.random()
+    var qaPairs: RealmList<QAPair> = realmListOf()
+    var createdAt: RealmInstant = RealmInstant.now()
+    var lastModified: RealmInstant = RealmInstant.now()
 }
