@@ -1,11 +1,17 @@
 package com.luminatemystory.shared.schemas
 
-/**
- * Chapter
- * 
- * Represents a chapter within a story, containing multiple scenes
- * and metadata about the chapter structure.
- */
-class Chapter {
-    // TODO: Implement Chapter as Realm object with proper relationships
+import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmInstant
+import io.realm.kotlin.types.RealmList
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.RealmUUID
+import io.realm.kotlin.types.annotations.PrimaryKey
+
+class Chapter : RealmObject {
+    @PrimaryKey
+    var id: RealmUUID = RealmUUID.random()
+    var title: String = ""
+    var scenes: RealmList<Scene> = realmListOf()
+    var createdAt: RealmInstant = RealmInstant.now()
+    var lastModified: RealmInstant = RealmInstant.now()
 }
