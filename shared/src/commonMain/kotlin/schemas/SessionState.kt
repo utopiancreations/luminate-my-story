@@ -1,11 +1,11 @@
 package com.luminatemystory.shared.schemas
 
-/**
- * Session State
- * 
- * Represents the current state of a user session,
- * including progress, preferences, and temporary data.
- */
-class SessionState {
-    // TODO: Implement SessionState as Realm object
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.RealmUUID
+import io.realm.kotlin.types.annotations.PrimaryKey
+
+class SessionState : RealmObject {
+    @PrimaryKey
+    var id: RealmUUID = RealmUUID.random()
+    var currentStoryId: String? = null
 }
