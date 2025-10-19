@@ -7,5 +7,11 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 class SessionState : RealmObject {
     @PrimaryKey
     var id: RealmUUID = RealmUUID.random()
-    var currentStoryId: String? = null
+    var activeStoryId: RealmUUID? = null
+    var activeChapterId: RealmUUID? = null
+    var activeSceneId: RealmUUID? = null
+    var currentInputMode: String = "Text" // "Voice", "Text"
+    var partialUserInput: String = ""
+    var lastLumiResponse: String = ""
+    var isAwaitingUserInput: Boolean = false
 }

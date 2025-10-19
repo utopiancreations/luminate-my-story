@@ -10,5 +10,5 @@ class QAPair : RealmObject {
     var id: RealmUUID = RealmUUID.random()
     var question: String = ""
     var answer: String = ""
-    var createdAt: RealmInstant = RealmInstant.now()
+    var timestamp: RealmInstant = RealmInstant.now()
 }
