@@ -1,0 +1,38 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Android Studio
+*.iml
+.idea/
+.gradle/
+build/
+local.properties
+
+# Kotlin/Native
+*.kotlin_module
+
+# Xcode
+xcuserdata/
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+DerivedData/
+
+# Realm
+realm-object-store/
+
+# Reference POC Python files
+/reference_poc_python/
