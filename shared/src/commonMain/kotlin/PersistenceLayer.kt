@@ -125,11 +125,11 @@ class PersistenceLayer {
     /**
      * Creates a new scene for a given chapter.
      * @param chapter The chapter to add the scene to.
-     * @param content The content of the new scene.
+     * @param title The title of the new scene.
      * @return The newly created Scene object.
      */
-    suspend fun createScene(chapter: Chapter, content: String): Scene {
-        val scene = Scene().apply { this.content = content }
+    suspend fun createScene(chapter: Chapter, title: String?): Scene {
+        val scene = Scene().apply { this.title = title }
         realm.write {
             findLatest(chapter)?.scenes?.add(scene)
         }
@@ -152,7 +152,9 @@ class PersistenceLayer {
     suspend fun updateScene(scene: Scene) {
         realm.write {
             findLatest(scene)?.let {
-                it.content = scene.content
+                it.title = scene.title
+                it.order = scene.order
+                it.draftText = scene.draftText
                 it.lastModified = scene.lastModified
             }
         }
@@ -263,6 +265,12 @@ class PersistenceLayer {
         realm.write {
             findLatest(settings)?.let {
                 it.appVersion = settings.appVersion
+                it.enableEmotionalCheckins = settings.enableEmotionalCheckins
+                it.defaultInputMode = settings.defaultInputMode
+                it.ttsVoice = settings.ttsVoice
+                it.defaultExportFormat = settings.defaultExportFormat
+                it.cloudSyncProvider = settings.cloudSyncProvider
+                it.cloudSyncEnabled = settings.cloudSyncEnabled
             }
         }
     }
