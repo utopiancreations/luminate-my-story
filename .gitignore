@@ -33,3 +33,19 @@ DerivedData/
 
 # Realm
 realm-object-store/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Java heap dumps
+*.hprof
+
+# Gradle wrapper jar (should be downloaded, not committed)
+gradle/wrapper/gradle-wrapper.jar
+
+# Gradle properties (may contain sensitive info)
+gradle.properties
