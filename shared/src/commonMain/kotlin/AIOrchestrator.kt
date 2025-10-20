@@ -49,15 +49,54 @@ class AIOrchestrator(private val llmHandler: LLMHandler) {
     }
 
     /**
-     * Generates an interview question prompt based on an outline point.
-     * @param context The outline point.
+     * Generates an interview question based on the current conversation context.
+     *
+     * This method now accepts a rich context string from ContextService that includes
+     * the scene title and conversation history, which it parses and formats for the LLM.
+     *
+     * @param contextString The formatted context from ContextService containing scene and conversation history.
      * @param userContext The user's personalization data.
-     * @return A generated prompt.
+     * @return The next interview question from Lumi.
      */
-    suspend fun generateInterviewQuestion(context: String, userContext: UserContext): String {
-        val params = mapOf("outline_point" to context)
+    suspend fun generateInterviewQuestion(contextString: String, userContext: UserContext): String {
+        // Parse the context string to extract scene title and conversation history
+        val (sceneTitle, conversationHistory) = parseContextString(contextString)
+
+        // Prepare parameters for the template
+        val params = mapOf(
+            "scene_title" to sceneTitle,
+            "conversation_history" to conversationHistory
+        )
+
         val finalPrompt = buildPrompt(LumiPromptTemplates.GET_INTERVIEW_PROMPT_TEMPLATE, userContext, params)
         return llmHandler.executePrompt(finalPrompt)
+    }
+
+    /**
+     * Parses the context string from ContextService into scene title and conversation history.
+     *
+     * @param contextString The formatted context string.
+     * @return A Pair of (sceneTitle, conversationHistory).
+     */
+    private fun parseContextString(contextString: String): Pair<String, String> {
+        val lines = contextString.lines()
+
+        var sceneTitle = "Unknown Scene"
+        var conversationHistory = "No conversation history yet."
+
+        // Find the scene title (first line after "Scene:")
+        val sceneLine = lines.find { it.startsWith("Scene:") }
+        if (sceneLine != null) {
+            sceneTitle = sceneLine.substringAfter("Scene:").trim()
+        }
+
+        // Find the conversation history section
+        val historyStartIndex = lines.indexOfFirst { it.contains("Conversation History:") }
+        if (historyStartIndex != -1 && historyStartIndex + 1 < lines.size) {
+            conversationHistory = lines.drop(historyStartIndex + 1).joinToString("\n").trim()
+        }
+
+        return Pair(sceneTitle, conversationHistory)
     }
 
     /**

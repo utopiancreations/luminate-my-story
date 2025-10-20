@@ -14,10 +14,12 @@ import kotlinx.coroutines.launch
  *
  * @property storyManager The manager for story-related operations.
  * @property aiOrchestrator The orchestrator for AI interactions.
+ * @property contextService The service for building intelligent conversation context.
  */
 class SessionManager(
     private val storyManager: StoryManager,
     private val aiOrchestrator: AIOrchestrator,
+    private val contextService: ContextService,
     private val sttHandler: STTHandler,
     private val ttsHandler: TTSHandler
 ) {
@@ -46,28 +48,76 @@ class SessionManager(
      * Processes user text/transcription. Triggers the AIOrchestrator
      * and returns the new SessionState.
      *
-     * @param input The user's input.
+     * This method now uses ContextService to build intelligent conversation context,
+     * preventing context window exhaustion and enabling more relevant questions.
+     *
+     * @param input The user's input/answer.
      * @param speakResponse If true, uses TTS to speak the response (for voice mode).
      * @return The updated SessionState.
      */
     suspend fun handleUserInput(input: String, speakResponse: Boolean = false): SessionState {
         sessionState?.let { state ->
-            // 1. Call the AI Orchestrator to get Lumi's response
-            val lumiResponse = aiOrchestrator.generateInterviewQuestion(input, userContext)
+            // Get the active scene ID
+            val sceneId = state.activeSceneId
+            if (sceneId == null) {
+                state.lastLumiResponse = "Error: No active scene. Please start a session first."
+                return state
+            }
 
-            // 2. Update the SessionState with the new information
+            // 1. Build intelligent context using ContextService
+            val conversationContext = contextService.buildContextWithCurrentInput(sceneId, input)
+
+            // 2. Call the AI Orchestrator to get Lumi's next question
+            val lumiResponse = aiOrchestrator.generateInterviewQuestion(conversationContext, userContext)
+
+            // 3. Update the SessionState with the new information
             state.lastLumiResponse = lumiResponse
             state.isAwaitingUserInput = true
 
-            // 3. Speak the response if in voice mode
+            // 4. Speak the response if in voice mode
             if (speakResponse) {
                 ttsHandler.speak(lumiResponse)
             }
 
-            // 4. Return the updated state
+            // 5. Return the updated state
             return state
         }
         // This should not happen if a session is active
+        return SessionState()
+    }
+
+    /**
+     * Starts an interview session for a scene.
+     * Gets the first question from Lumi to begin the conversation.
+     *
+     * @param speakResponse If true, speaks the first question.
+     * @return The session state with Lumi's first question.
+     */
+    suspend fun startInterviewSession(speakResponse: Boolean = false): SessionState {
+        sessionState?.let { state ->
+            val sceneId = state.activeSceneId
+            if (sceneId == null) {
+                state.lastLumiResponse = "Error: No active scene. Please start a session first."
+                return state
+            }
+
+            // Build initial context (no current input yet)
+            val conversationContext = contextService.buildContextForInterview(sceneId)
+
+            // Get Lumi's first question
+            val lumiResponse = aiOrchestrator.generateInterviewQuestion(conversationContext, userContext)
+
+            // Update state
+            state.lastLumiResponse = lumiResponse
+            state.isAwaitingUserInput = true
+
+            // Speak if requested
+            if (speakResponse) {
+                ttsHandler.speak(lumiResponse)
+            }
+
+            return state
+        }
         return SessionState()
     }
 

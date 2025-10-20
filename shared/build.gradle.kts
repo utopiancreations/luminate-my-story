@@ -36,7 +36,11 @@ kotlin {
                 implementation(libs.kotlin.test)
             }
         }
-        val androidMain by getting
+        val androidMain by getting {
+            dependencies {
+                implementation("com.google.mediapipe:tasks-genai:0.10.14")
+            }
+        }
         val androidUnitTest by getting
         val iosX64Main by getting
         val iosArm64Main by getting

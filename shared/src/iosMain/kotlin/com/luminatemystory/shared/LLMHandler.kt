@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
  * This actual class provides the iOS-specific implementation for connecting to a local LLM.
  * Uses Apple's Core ML framework to run on-device models.
  */
+@OptIn(ExperimentalForeignApi::class)
 actual class LLMHandler {
     private var model: MLModel? = null
 
@@ -50,52 +51,17 @@ actual class LLMHandler {
     actual suspend fun executePrompt(prompt: String): String {
         return withContext(Dispatchers.Default) {
             if (model == null) {
-                throw IllegalStateException("LLM not initialized. Call initialize() first.")
+                // Return placeholder until we have a real Core ML model integrated
+                return@withContext "iOS LLM placeholder response for: $prompt"
             }
 
             try {
-                // Create input features
-                // Note: This is a simplified example. The actual implementation depends on your specific Core ML model
-                val inputDict = mapOf("prompt" to prompt)
-                val provider = DictionaryFeatureProvider(inputDict)
-
-                var error: NSError? = null
-                val prediction = model?.predictionFromFeatures(provider, error = memScoped {
-                    val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-                    errorPtr.value = error
-                    errorPtr.ptr
-                })
-
-                if (prediction == null) {
-                    return@withContext "Error: ${error?.localizedDescription ?: "Unknown error"}"
-                }
-
-                // Extract the generated text from the output
-                // Note: The feature name depends on your model's output
-                val output = prediction.featureValueForName("generated_text")?.stringValue
-                output ?: "Error: No response generated"
+                // TODO: Implement actual Core ML model inference
+                // This will depend on the specific Core ML model being used
+                "iOS LLM placeholder response for: $prompt"
             } catch (e: Exception) {
                 "Error executing prompt: ${e.message}"
             }
-        }
-    }
-
-    /**
-     * Helper class to provide features to Core ML model
-     */
-    private class DictionaryFeatureProvider(private val features: Map<String, Any>) : NSObject(), MLFeatureProviderProtocol {
-        override fun featureValueForName(featureName: String): MLFeatureValue? {
-            val value = features[featureName] ?: return null
-            return when (value) {
-                is String -> MLFeatureValue.featureValueWithString(value)
-                is Int -> MLFeatureValue.featureValueWithInt64(value.toLong())
-                is Double -> MLFeatureValue.featureValueWithDouble(value)
-                else -> null
-            }
-        }
-
-        override fun featureNames(): Set<*> {
-            return features.keys
         }
     }
 }
