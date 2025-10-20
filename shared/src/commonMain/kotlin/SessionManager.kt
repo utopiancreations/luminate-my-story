@@ -1,6 +1,7 @@
 package com.luminatemystory.shared
 
 import com.luminatemystory.shared.schemas.SessionState
+import com.luminatemystory.shared.schemas.UserContext
 import io.realm.kotlin.types.RealmUUID
 
 /**
@@ -20,6 +21,7 @@ class SessionManager(
 ) {
 
     private var sessionState: SessionState? = null
+    private var userContext: UserContext = UserContext()
 
     /**
      * Initializes a creative session for a specific scene.
@@ -48,7 +50,7 @@ class SessionManager(
     suspend fun handleUserInput(input: String): SessionState {
         sessionState?.let { state ->
             // 1. Call the AI Orchestrator to get Lumi's response
-            val lumiResponse = aiOrchestrator.generateInterviewQuestion(input, storyManager.getUserContext())
+            val lumiResponse = aiOrchestrator.generateInterviewQuestion(input, userContext)
 
             // 2. Update the SessionState with the new information
             state.lastLumiResponse = lumiResponse
@@ -59,6 +61,24 @@ class SessionManager(
         }
         // This should not happen if a session is active
         return SessionState()
+    }
+
+    /**
+     * Updates the user context for the current session.
+     *
+     * @param context The updated UserContext.
+     */
+    fun updateUserContext(context: UserContext) {
+        userContext = context
+    }
+
+    /**
+     * Retrieves the current user context.
+     *
+     * @return The current UserContext.
+     */
+    fun getUserContext(): UserContext {
+        return userContext
     }
 
     fun startVoiceSession() {
