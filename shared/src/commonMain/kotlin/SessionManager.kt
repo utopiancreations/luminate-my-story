@@ -45,6 +45,33 @@ class SessionManager(
     }
 
     /**
+     * Saves a question-answer pair to the database.
+     *
+     * @param question The question asked by Lumi.
+     * @param answer The user's answer.
+     */
+    private suspend fun saveQAPair(question: String, answer: String) {
+        sessionState?.let { state ->
+            val sceneId = state.activeSceneId ?: return
+
+            // Retrieve the scene
+            val scene = storyManager.getScene(sceneId) ?: return
+
+            // Create InterviewData if it doesn't exist
+            if (scene.interviewData == null) {
+                val interviewData = storyManager.createInterviewData()
+                scene.interviewData = interviewData
+                storyManager.updateScene(scene)
+            }
+
+            // Create and add the QAPair
+            scene.interviewData?.let { interviewData ->
+                storyManager.createQAPair(interviewData, question, answer)
+            }
+        }
+    }
+
+    /**
      * Processes user text/transcription. Triggers the AIOrchestrator
      * and returns the new SessionState.
      *
@@ -64,22 +91,28 @@ class SessionManager(
                 return state
             }
 
-            // 1. Build intelligent context using ContextService
+            // 1. Save the previous question and current answer to the database
+            val previousQuestion = state.lastLumiResponse
+            if (previousQuestion.isNotEmpty()) {
+                saveQAPair(previousQuestion, input)
+            }
+
+            // 2. Build intelligent context using ContextService
             val conversationContext = contextService.buildContextWithCurrentInput(sceneId, input)
 
-            // 2. Call the AI Orchestrator to get Lumi's next question
+            // 3. Call the AI Orchestrator to get Lumi's next question
             val lumiResponse = aiOrchestrator.generateInterviewQuestion(conversationContext, userContext)
 
-            // 3. Update the SessionState with the new information
+            // 4. Update the SessionState with the new information
             state.lastLumiResponse = lumiResponse
             state.isAwaitingUserInput = true
 
-            // 4. Speak the response if in voice mode
+            // 5. Speak the response if in voice mode
             if (speakResponse) {
                 ttsHandler.speak(lumiResponse)
             }
 
-            // 5. Return the updated state
+            // 6. Return the updated state
             return state
         }
         // This should not happen if a session is active
