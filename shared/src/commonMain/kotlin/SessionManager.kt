@@ -3,6 +3,8 @@ package com.luminatemystory.shared
 import com.luminatemystory.shared.schemas.SessionState
 import com.luminatemystory.shared.schemas.UserContext
 import io.realm.kotlin.types.RealmUUID
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * Session Manager
@@ -45,9 +47,10 @@ class SessionManager(
      * and returns the new SessionState.
      *
      * @param input The user's input.
+     * @param speakResponse If true, uses TTS to speak the response (for voice mode).
      * @return The updated SessionState.
      */
-    suspend fun handleUserInput(input: String): SessionState {
+    suspend fun handleUserInput(input: String, speakResponse: Boolean = false): SessionState {
         sessionState?.let { state ->
             // 1. Call the AI Orchestrator to get Lumi's response
             val lumiResponse = aiOrchestrator.generateInterviewQuestion(input, userContext)
@@ -56,7 +59,12 @@ class SessionManager(
             state.lastLumiResponse = lumiResponse
             state.isAwaitingUserInput = true
 
-            // 3. Return the updated state
+            // 3. Speak the response if in voice mode
+            if (speakResponse) {
+                ttsHandler.speak(lumiResponse)
+            }
+
+            // 4. Return the updated state
             return state
         }
         // This should not happen if a session is active
@@ -81,13 +89,40 @@ class SessionManager(
         return userContext
     }
 
-    fun startVoiceSession() {
+    /**
+     * Starts a voice conversation session.
+     * Implements the complete loop: voice input → LLM → voice output
+     *
+     * @param onTranscriptionReceived Optional callback when transcription is received.
+     * @param onResponseGenerated Optional callback when LLM response is generated.
+     */
+    fun startVoiceSession(
+        onTranscriptionReceived: ((String) -> Unit)? = null,
+        onResponseGenerated: ((String) -> Unit)? = null
+    ) {
         sttHandler.startListening { transcribedText ->
-            // This block will be executed when the STT service has a result
-            // TODO: This should be handled in a coroutine
-            // For now, we'll just print the text
-            println("Transcribed text: $transcribedText")
+            // Notify callback of transcription
+            onTranscriptionReceived?.invoke(transcribedText)
+
+            // Process the transcribed text through the LLM and speak the response
+            // Note: This uses a coroutine scope that should be provided by the platform layer
+            kotlinx.coroutines.GlobalScope.launch {
+                try {
+                    val state = handleUserInput(transcribedText, speakResponse = true)
+                    onResponseGenerated?.invoke(state.lastLumiResponse)
+                } catch (e: Exception) {
+                    // Handle errors (e.g., log or speak error message)
+                    ttsHandler.speak("I'm sorry, I encountered an error processing your request.")
+                }
+            }
         }
+    }
+
+    /**
+     * Stops the voice session.
+     */
+    fun stopVoiceSession() {
+        sttHandler.stopListening()
     }
 
     /**
