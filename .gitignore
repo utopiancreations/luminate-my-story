@@ -48,4 +48,5 @@ package-lock.json
 gradle/wrapper/gradle-wrapper.jar
 
 # Gradle properties (may contain sensitive info)
-gradle.properties
+gradle.propertiesgemma-2b-uncensored-v1.Q8_0.gguf
+*.gguf
