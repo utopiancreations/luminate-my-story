@@ -11,6 +11,7 @@ import platform.AVFAudio.*
  * This actual class provides the iOS-specific implementation for speech-to-text services.
  * Uses Apple's SFSpeechRecognizer for on-device speech recognition.
  */
+@OptIn(ExperimentalForeignApi::class)
 actual class STTHandler {
     private var speechRecognizer: SFSpeechRecognizer? = null
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest? = null
@@ -20,7 +21,8 @@ actual class STTHandler {
 
     init {
         // Initialize the speech recognizer for US English
-        speechRecognizer = SFSpeechRecognizer.localeIdentifier("en-US")
+        val locale = NSLocale(localeIdentifier = "en-US")
+        speechRecognizer = SFSpeechRecognizer(locale = locale)
     }
 
     actual fun startListening(onResult: (String) -> Unit) {
@@ -29,12 +31,12 @@ actual class STTHandler {
         // Request authorization first
         SFSpeechRecognizer.requestAuthorization { authStatus ->
             when (authStatus) {
-                SFSpeechRecognizerAuthorizationStatusAuthorized -> {
+                SFSpeechRecognizerAuthorizationStatus.SFSpeechRecognizerAuthorizationStatusAuthorized -> {
                     this.startRecognition()
                 }
-                SFSpeechRecognizerAuthorizationStatusDenied,
-                SFSpeechRecognizerAuthorizationStatusRestricted,
-                SFSpeechRecognizerAuthorizationStatusNotDetermined -> {
+                SFSpeechRecognizerAuthorizationStatus.SFSpeechRecognizerAuthorizationStatusDenied,
+                SFSpeechRecognizerAuthorizationStatus.SFSpeechRecognizerAuthorizationStatusRestricted,
+                SFSpeechRecognizerAuthorizationStatus.SFSpeechRecognizerAuthorizationStatusNotDetermined -> {
                     onResult("Speech recognition not authorized")
                 }
                 else -> {
@@ -84,7 +86,7 @@ actual class STTHandler {
 
                 if (result != null) {
                     val transcription = result.bestTranscription.formattedString
-                    if (result.isFinal) {
+                    if (result.final) {
                         this.stopListening()
                         this.currentCallback?.invoke(transcription)
                     }
@@ -99,7 +101,7 @@ actual class STTHandler {
             bufferSize = 1024u,
             format = recordingFormat
         ) { buffer, _ ->
-            this.recognitionRequest?.appendAudioPCMBuffer(buffer)
+            buffer?.let { this.recognitionRequest?.appendAudioPCMBuffer(it) }
         }
 
         // Start audio engine

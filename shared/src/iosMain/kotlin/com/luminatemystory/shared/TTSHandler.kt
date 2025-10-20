@@ -10,12 +10,12 @@ import platform.Foundation.*
  * This actual class provides the iOS-specific implementation for text-to-speech services.
  * Uses Apple's AVSpeechSynthesizer for natural-sounding text-to-speech.
  */
-actual class TTSHandler : NSObject(), AVSpeechSynthesizerDelegateProtocol {
+@OptIn(ExperimentalForeignApi::class)
+actual class TTSHandler {
     private val synthesizer: AVSpeechSynthesizer = AVSpeechSynthesizer()
     private var currentVoice: AVSpeechSynthesisVoice? = null
 
     init {
-        synthesizer.delegate = this
         // Set default voice to US English
         currentVoice = AVSpeechSynthesisVoice.voiceWithLanguage("en-US")
     }
@@ -29,12 +29,12 @@ actual class TTSHandler : NSObject(), AVSpeechSynthesizerDelegateProtocol {
         // Configure the utterance
         utterance.voice = currentVoice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate  // Normal speed
-        utterance.pitchMultiplier = 1.0  // Normal pitch
-        utterance.volume = 1.0  // Full volume
+        utterance.pitchMultiplier = 1.0f  // Normal pitch
+        utterance.volume = 1.0f  // Full volume
 
         // Stop any ongoing speech
-        if (synthesizer.isSpeaking) {
-            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate)
+        if (synthesizer.speaking) {
+            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundary.AVSpeechBoundaryImmediate)
         }
 
         // Speak the utterance
@@ -74,8 +74,8 @@ actual class TTSHandler : NSObject(), AVSpeechSynthesizerDelegateProtocol {
      * Stops speaking immediately.
      */
     fun stop() {
-        if (synthesizer.isSpeaking) {
-            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate)
+        if (synthesizer.speaking) {
+            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundary.AVSpeechBoundaryImmediate)
         }
     }
 
@@ -83,8 +83,8 @@ actual class TTSHandler : NSObject(), AVSpeechSynthesizerDelegateProtocol {
      * Pauses speaking.
      */
     fun pause() {
-        if (synthesizer.isSpeaking) {
-            synthesizer.pauseSpeakingAtBoundary(AVSpeechBoundaryImmediate)
+        if (synthesizer.speaking) {
+            synthesizer.pauseSpeakingAtBoundary(AVSpeechBoundary.AVSpeechBoundaryImmediate)
         }
     }
 
@@ -92,30 +92,12 @@ actual class TTSHandler : NSObject(), AVSpeechSynthesizerDelegateProtocol {
      * Resumes speaking.
      */
     fun resume() {
-        if (synthesizer.isPaused) {
+        if (synthesizer.paused) {
             synthesizer.continueSpeaking()
         }
     }
 
-    // MARK: - AVSpeechSynthesizerDelegate
-
-    override fun speechSynthesizer(synthesizer: AVSpeechSynthesizer, didStartSpeechUtterance: AVSpeechUtterance) {
-        // Called when the synthesizer starts speaking
-    }
-
-    override fun speechSynthesizer(synthesizer: AVSpeechSynthesizer, didFinishSpeechUtterance: AVSpeechUtterance) {
-        // Called when the synthesizer finishes speaking
-    }
-
-    override fun speechSynthesizer(synthesizer: AVSpeechSynthesizer, didPauseSpeechUtterance: AVSpeechUtterance) {
-        // Called when the synthesizer pauses
-    }
-
-    override fun speechSynthesizer(synthesizer: AVSpeechSynthesizer, didContinueSpeechUtterance: AVSpeechUtterance) {
-        // Called when the synthesizer resumes
-    }
-
-    override fun speechSynthesizer(synthesizer: AVSpeechSynthesizer, didCancelSpeechUtterance: AVSpeechUtterance) {
-        // Called when the synthesizer cancels
-    }
+    // Note: AVSpeechSynthesizerDelegate methods removed
+    // The delegate protocol is not strictly needed for basic TTS functionality
+    // and causes Kotlin/Native compilation issues with conflicting overloads
 }
