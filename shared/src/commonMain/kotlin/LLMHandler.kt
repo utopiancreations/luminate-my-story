@@ -1,12 +1,10 @@
 package com.luminatemystory.shared
 
 /**
- * LLM Handler Interface
+ * LLM Handler expect Class
  *
- * This interface defines the contract for connecting to a local LLM.
- * The AIOrchestrator will depend on this interface, allowing for
- * different LLM implementations to be swapped in and out.
+ * This expect class defines the contract for connecting to a local LLM.
  */
-interface LLMHandler {
-    // TODO: Define methods for interacting with the LLM
+expect class LLMHandler {
+    suspend fun executePrompt(prompt: String): String
 }

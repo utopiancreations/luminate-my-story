@@ -290,7 +290,7 @@ class PersistenceLayer {
     suspend fun updateSessionState(state: SessionState) {
         realm.write {
             findLatest(state)?.let {
-                it.currentStoryId = state.currentStoryId
+                it.activeStoryId = state.activeStoryId
             }
         }
     }

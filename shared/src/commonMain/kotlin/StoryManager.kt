@@ -230,4 +230,19 @@ class StoryManager(private val persistenceLayer: PersistenceLayer) {
     suspend fun updateSessionState(state: SessionState) {
         persistenceLayer.updateSessionState(state)
     }
+
+    /**
+     * Retrieves the UserContext from AppSettings.
+     *
+     * @return The UserContext object.
+     */
+    fun getUserContext(): UserContext {
+        val appSettings = persistenceLayer.getAppSettings() ?: return UserContext()
+        return UserContext(
+            userName = appSettings.userName,
+            userDescription = appSettings.userDescription,
+            userThemes = appSettings.userThemes,
+            mentionedNames = emptyList() // TODO: Get mentioned names from somewhere
+        )
+    }
 }

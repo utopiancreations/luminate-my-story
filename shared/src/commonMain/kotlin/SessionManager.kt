@@ -14,7 +14,9 @@ import io.realm.kotlin.types.RealmUUID
  */
 class SessionManager(
     private val storyManager: StoryManager,
-    private val aiOrchestrator: AIOrchestrator
+    private val aiOrchestrator: AIOrchestrator,
+    private val sttHandler: STTHandler,
+    private val ttsHandler: TTSHandler
 ) {
 
     private var sessionState: SessionState? = null
@@ -43,10 +45,10 @@ class SessionManager(
      * @param input The user's input.
      * @return The updated SessionState.
      */
-    fun handleUserInput(input: String): SessionState {
+    suspend fun handleUserInput(input: String): SessionState {
         sessionState?.let { state ->
             // 1. Call the AI Orchestrator to get Lumi's response
-            val lumiResponse = aiOrchestrator.generateInterviewQuestion(input)
+            val lumiResponse = aiOrchestrator.generateInterviewQuestion(input, storyManager.getUserContext())
 
             // 2. Update the SessionState with the new information
             state.lastLumiResponse = lumiResponse
@@ -57,6 +59,15 @@ class SessionManager(
         }
         // This should not happen if a session is active
         return SessionState()
+    }
+
+    fun startVoiceSession() {
+        sttHandler.startListening { transcribedText ->
+            // This block will be executed when the STT service has a result
+            // TODO: This should be handled in a coroutine
+            // For now, we'll just print the text
+            println("Transcribed text: $transcribedText")
+        }
     }
 
     /**

@@ -8,6 +8,9 @@ class AppSettings : RealmObject {
     @PrimaryKey
     var id: RealmUUID = RealmUUID.random()
     var appVersion: String = "1.1.0"
+    var userName: String = "the author"
+    var userDescription: String = "an author"
+    var userThemes: String = "their life"
     var enableEmotionalCheckins: Boolean = true
     var defaultInputMode: String = "Voice" // "Voice", "Text"
     var ttsVoice: String = "Default" // Identifier for the selected Text-to-Speech voice

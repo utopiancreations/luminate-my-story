@@ -38,38 +38,35 @@ class AIOrchestrator(private val llmHandler: LLMHandler) {
 
     /**
      * Processes a new topic from the user and generates an outline prompt.
-     *
      * @param topic The user's topic (raw text).
      * @param userContext The user's personalization data.
      * @return A generated prompt.
      */
-    fun processNewTopic(topic: String, userContext: UserContext): String {
+    suspend fun processNewTopic(topic: String, userContext: UserContext): String {
         val params = mapOf("raw_text_content" to topic)
         val finalPrompt = buildPrompt(LumiPromptTemplates.GET_OUTLINE_PROMPT_TEMPLATE, userContext, params)
-        return finalPrompt
+        return llmHandler.executePrompt(finalPrompt)
     }
 
     /**
      * Generates an interview question prompt based on an outline point.
-     *
      * @param context The outline point.
      * @param userContext The user's personalization data.
      * @return A generated prompt.
      */
-    fun generateInterviewQuestion(context: String, userContext: UserContext): String {
+    suspend fun generateInterviewQuestion(context: String, userContext: UserContext): String {
         val params = mapOf("outline_point" to context)
         val finalPrompt = buildPrompt(LumiPromptTemplates.GET_INTERVIEW_PROMPT_TEMPLATE, userContext, params)
-        return finalPrompt
+        return llmHandler.executePrompt(finalPrompt)
     }
 
     /**
      * Takes completed interview data and generates a draft for a scene.
-     *
      * @param interviewData The interview data.
      * @param userContext The user's personalization data.
      * @return A generated draft prompt.
      */
-    fun generateDraft(interviewData: InterviewData, userContext: UserContext): String {
+    suspend fun generateDraft(interviewData: InterviewData, userContext: UserContext): String {
         // 1. Format the Q&A block from interviewData
         val qAndABlock = interviewData.qaPairs.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
 
@@ -84,6 +81,6 @@ class AIOrchestrator(private val llmHandler: LLMHandler) {
 
         // 4. (Placeholder) Return the generated prompt for now to verify it's working
         // In the future, this will be sent to the llmHandler
-        return finalPrompt
+        return llmHandler.executePrompt(finalPrompt)
     }
 }

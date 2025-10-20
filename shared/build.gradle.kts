@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    id("io.realm.kotlin")
+    alias(libs.plugins.realmKotlin)
 }
 
 kotlin {
@@ -27,7 +27,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("io.realm.kotlin:library-base:1.11.0")
+                implementation("io.realm.kotlin:library-base:2.3.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
             }
         }
         val commonTest by getting {
@@ -56,6 +57,8 @@ kotlin {
             iosSimulatorArm64Test.dependsOn(this)
         }
     }
+
+    
 }
 
 android {
