@@ -32,11 +32,12 @@ class StoryManager(private val persistenceLayer: PersistenceLayer) {
     }
 
     /**
-     * Retrieves a list of all stories.
-     * @return A list of all Story objects.
+     * Retrieves a list of all stories, sorted by lastModified descending.
+     * @return A list of all Story objects, most recently modified first.
      */
     fun getStoriesList(): List<Story> {
         return persistenceLayer.getStoriesList()
+            .sortedByDescending { it.lastModified }
     }
 
     /**
@@ -229,5 +230,77 @@ class StoryManager(private val persistenceLayer: PersistenceLayer) {
      */
     suspend fun updateSessionState(state: SessionState) {
         persistenceLayer.updateSessionState(state)
+    }
+
+    // ========================================
+    // Enhanced Story Management Methods
+    // ========================================
+
+    /**
+     * Adds a new chapter to a specific story by ID.
+     * @param storyId The ID of the story to add the chapter to.
+     * @param title The title of the new chapter.
+     * @return The newly created Chapter object, or null if story not found.
+     */
+    suspend fun addChapter(storyId: RealmUUID, title: String): Chapter? {
+        val story = persistenceLayer.getStory(storyId) ?: return null
+        return persistenceLayer.createChapter(story, title)
+    }
+
+    /**
+     * Adds a new scene to a specific chapter by ID.
+     * @param chapterId The ID of the chapter to add the scene to.
+     * @param title The title of the new scene (can be null).
+     * @return The newly created Scene object, or null if chapter not found.
+     */
+    suspend fun addScene(chapterId: RealmUUID, title: String?): Scene? {
+        val chapter = persistenceLayer.getChapter(chapterId) ?: return null
+        return persistenceLayer.createScene(chapter, title)
+    }
+
+    /**
+     * Deletes a story and all of its nested chapters and scenes by ID.
+     * Performs cascade delete to ensure data integrity.
+     * @param id The ID of the story to delete.
+     */
+    suspend fun deleteStory(id: RealmUUID) {
+        val story = persistenceLayer.getStory(id) ?: return
+
+        // Delete all scenes in all chapters
+        story.chapters.forEach { chapter ->
+            chapter.scenes.forEach { scene ->
+                persistenceLayer.deleteScene(scene)
+            }
+            persistenceLayer.deleteChapter(chapter)
+        }
+
+        // Delete the story itself
+        persistenceLayer.deleteStory(story)
+    }
+
+    /**
+     * Deletes a chapter and all of its nested scenes by ID.
+     * Performs cascade delete to ensure data integrity.
+     * @param id The ID of the chapter to delete.
+     */
+    suspend fun deleteChapter(id: RealmUUID) {
+        val chapter = persistenceLayer.getChapter(id) ?: return
+
+        // Delete all scenes in the chapter
+        chapter.scenes.forEach { scene ->
+            persistenceLayer.deleteScene(scene)
+        }
+
+        // Delete the chapter itself
+        persistenceLayer.deleteChapter(chapter)
+    }
+
+    /**
+     * Deletes a single scene by ID.
+     * @param id The ID of the scene to delete.
+     */
+    suspend fun deleteScene(id: RealmUUID) {
+        val scene = persistenceLayer.getScene(id) ?: return
+        persistenceLayer.deleteScene(scene)
     }
 }
